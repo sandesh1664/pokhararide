@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,9 +6,19 @@ import heroImage from "@/assets/hero-city.jpg";
 import LiveMap from "@/components/LiveMap";
 import MapboxTokenInput from "@/components/MapboxTokenInput";
 import { useMapStore } from "@/stores/mapStore";
+import { BookingFlow } from "@/components/booking";
 
 const HeroSection = () => {
   const { mapboxToken } = useMapStore();
+  const [showBooking, setShowBooking] = useState(false);
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+
+  const handleRequestRide = () => {
+    if (pickup && dropoff) {
+      setShowBooking(true);
+    }
+  };
 
   return (
     <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
@@ -45,49 +56,71 @@ const HeroSection = () => {
               Request a ride in seconds. Choose your comfort level. Arrive safely at your destination.
             </p>
 
-            {/* Ride Booking Form */}
-            <div className="bg-card rounded-2xl p-6 shadow-xl max-w-md animate-scale-in" style={{ animationDelay: "0.2s" }}>
-              <div className="space-y-4">
-                {/* Mapbox Token Input */}
-                {!mapboxToken && (
-                  <div className="mb-4">
-                    <MapboxTokenInput />
+            {/* Show Booking Flow or Input Form */}
+            {showBooking ? (
+              <BookingFlow 
+                initialPickup={pickup || "Current Location"} 
+                initialDropoff={dropoff || "Times Square, NYC"}
+                onClose={() => {
+                  setShowBooking(false);
+                  setPickup("");
+                  setDropoff("");
+                }}
+              />
+            ) : (
+              <div className="bg-card rounded-2xl p-6 shadow-xl max-w-md animate-scale-in" style={{ animationDelay: "0.2s" }}>
+                <div className="space-y-4">
+                  {/* Mapbox Token Input */}
+                  {!mapboxToken && (
+                    <div className="mb-4">
+                      <MapboxTokenInput />
+                    </div>
+                  )}
+                  
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
+                    <Input
+                      variant="ride"
+                      inputSize="lg"
+                      placeholder="Pickup location"
+                      className="pl-12"
+                      value={pickup}
+                      onChange={(e) => setPickup(e.target.value)}
+                    />
                   </div>
-                )}
-                
-                <div className="relative">
-                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                  <Input
-                    variant="ride"
-                    inputSize="lg"
-                    placeholder="Pickup location"
-                    className="pl-12"
-                  />
-                </div>
-                <div className="relative">
-                  <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    variant="ride"
-                    inputSize="lg"
-                    placeholder="Where to?"
-                    className="pl-12"
-                  />
-                </div>
-                <Button variant="hero" size="lg" className="w-full">
-                  Request Ride
-                </Button>
-                
-                {mapboxToken && (
-                  <div className="pt-2">
-                    <MapboxTokenInput />
+                  <div className="relative">
+                    <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      variant="ride"
+                      inputSize="lg"
+                      placeholder="Where to?"
+                      className="pl-12"
+                      value={dropoff}
+                      onChange={(e) => setDropoff(e.target.value)}
+                    />
                   </div>
-                )}
+                  <Button 
+                    variant="hero" 
+                    size="lg" 
+                    className="w-full"
+                    onClick={handleRequestRide}
+                    disabled={!pickup || !dropoff}
+                  >
+                    Request Ride
+                  </Button>
+                  
+                  {mapboxToken && (
+                    <div className="pt-2">
+                      <MapboxTokenInput />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          {/* Right Content - Stats (only show when no map) */}
-          {!mapboxToken && (
+          {/* Right Content - Stats (only show when no map and no booking flow) */}
+          {!mapboxToken && !showBooking && (
             <div className="hidden lg:flex flex-col items-end gap-6 animate-fade-in" style={{ animationDelay: "0.4s" }}>
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
                 <div className="text-4xl font-bold text-hero-foreground mb-1">2M+</div>
