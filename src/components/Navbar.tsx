@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Car, LogOut } from "lucide-react";
+import { Menu, X, Car, LogOut, History } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, userRoles } = useAuth();
   const navigate = useNavigate();
+
+  const isDriver = userRoles.includes('driver');
 
   const handleSignOut = async () => {
     await signOut();
@@ -48,6 +50,13 @@ const Navbar = () => {
               <div className="w-20 h-10 bg-white/10 rounded-lg animate-pulse" />
             ) : user ? (
               <>
+                <Link 
+                  to="/history" 
+                  className="text-hero-muted hover:text-hero-foreground transition-colors flex items-center gap-1.5"
+                >
+                  <History className="w-4 h-4" />
+                  History
+                </Link>
                 <span className="text-hero-muted text-sm">
                   {user.email}
                 </span>
@@ -106,6 +115,13 @@ const Navbar = () => {
                   <div className="w-full h-10 bg-white/10 rounded-lg animate-pulse" />
                 ) : user ? (
                   <>
+                    <Link 
+                      to="/history" 
+                      className="text-hero-muted hover:text-hero-foreground transition-colors py-2 flex items-center gap-2"
+                    >
+                      <History className="w-4 h-4" />
+                      Ride History
+                    </Link>
                     <span className="text-hero-muted text-sm px-4 py-2">
                       {user.email}
                     </span>
