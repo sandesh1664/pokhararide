@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Car } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,9 +23,9 @@ const Navbar = () => {
             <a href="#rides" className="text-hero-muted hover:text-hero-foreground transition-colors">
               Ride
             </a>
-            <a href="#drive" className="text-hero-muted hover:text-hero-foreground transition-colors">
+            <Link to="/driver" className="text-hero-muted hover:text-hero-foreground transition-colors">
               Drive
-            </a>
+            </Link>
             <a href="#safety" className="text-hero-muted hover:text-hero-foreground transition-colors">
               Safety
             </a>
@@ -59,9 +60,9 @@ const Navbar = () => {
               <a href="#rides" className="text-hero-muted hover:text-hero-foreground transition-colors py-2">
                 Ride
               </a>
-              <a href="#drive" className="text-hero-muted hover:text-hero-foreground transition-colors py-2">
+              <Link to="/driver" className="text-hero-muted hover:text-hero-foreground transition-colors py-2">
                 Drive
-              </a>
+              </Link>
               <a href="#safety" className="text-hero-muted hover:text-hero-foreground transition-colors py-2">
                 Safety
               </a>
