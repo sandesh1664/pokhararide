@@ -1,18 +1,31 @@
 import { useState } from "react";
-import { MapPin, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import heroImage from "@/assets/hero-city.jpg";
 import LiveMap from "@/components/LiveMap";
 import MapboxTokenInput from "@/components/MapboxTokenInput";
+import LocationAutocomplete from "@/components/LocationAutocomplete";
 import { useMapStore } from "@/stores/mapStore";
 import { BookingFlow } from "@/components/booking";
 
 const HeroSection = () => {
-  const { mapboxToken } = useMapStore();
+  const { mapboxToken, setPickupLocation, setDropoffLocation } = useMapStore();
   const [showBooking, setShowBooking] = useState(false);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+
+  const handlePickupChange = (value: string, coordinates?: [number, number]) => {
+    setPickup(value);
+    if (coordinates) {
+      setPickupLocation(coordinates);
+    }
+  };
+
+  const handleDropoffChange = (value: string, coordinates?: [number, number]) => {
+    setDropoff(value);
+    if (coordinates) {
+      setDropoffLocation(coordinates);
+    }
+  };
 
   const handleRequestRide = () => {
     if (pickup && dropoff) {
@@ -77,28 +90,18 @@ const HeroSection = () => {
                     </div>
                   )}
                   
-                  <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary" />
-                    <Input
-                      variant="ride"
-                      inputSize="lg"
-                      placeholder="Pickup location"
-                      className="pl-12"
-                      value={pickup}
-                      onChange={(e) => setPickup(e.target.value)}
-                    />
-                  </div>
-                  <div className="relative">
-                    <Navigation className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      variant="ride"
-                      inputSize="lg"
-                      placeholder="Where to?"
-                      className="pl-12"
-                      value={dropoff}
-                      onChange={(e) => setDropoff(e.target.value)}
-                    />
-                  </div>
+                  <LocationAutocomplete
+                    value={pickup}
+                    onChange={handlePickupChange}
+                    placeholder="Pickup location"
+                    icon="pickup"
+                  />
+                  <LocationAutocomplete
+                    value={dropoff}
+                    onChange={handleDropoffChange}
+                    placeholder="Where to?"
+                    icon="dropoff"
+                  />
                   <Button 
                     variant="hero" 
                     size="lg" 

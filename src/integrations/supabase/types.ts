@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      drivers: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          license_number: string
+          license_plate: string
+          updated_at: string
+          user_id: string
+          vehicle_color: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_number: string
+          license_plate: string
+          updated_at?: string
+          user_id: string
+          vehicle_color: string
+          vehicle_make: string
+          vehicle_model: string
+          vehicle_year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          license_number?: string
+          license_plate?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_color?: string
+          vehicle_make?: string
+          vehicle_model?: string
+          vehicle_year?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -46,6 +88,74 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trips: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          distance_miles: number | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          fare: number
+          id: string
+          pickup_address: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          ride_type: string
+          rider_id: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          driver_id?: string | null
+          dropoff_address: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          fare: number
+          id?: string
+          pickup_address: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ride_type?: string
+          rider_id: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          distance_miles?: number | null
+          driver_id?: string | null
+          dropoff_address?: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          fare?: number
+          id?: string
+          pickup_address?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          ride_type?: string
+          rider_id?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trips_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
