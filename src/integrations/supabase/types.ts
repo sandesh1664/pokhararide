@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      active_rides: {
+        Row: {
+          created_at: string
+          driver_id: string | null
+          driver_lat: number | null
+          driver_lng: number | null
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          eta_minutes: number | null
+          id: string
+          pickup_lat: number | null
+          pickup_lng: number | null
+          rider_id: string
+          status: string
+          trip_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          eta_minutes?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          rider_id: string
+          status?: string
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string | null
+          driver_lat?: number | null
+          driver_lng?: number | null
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          eta_minutes?: number | null
+          id?: string
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          rider_id?: string
+          status?: string
+          trip_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_rides_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_rides_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       drivers: {
         Row: {
           created_at: string
@@ -53,6 +119,39 @@ export type Database = {
           vehicle_make?: string
           vehicle_model?: string
           vehicle_year?: number
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          card_brand: string | null
+          card_last_four: string | null
+          created_at: string
+          id: string
+          is_default: boolean | null
+          stripe_customer_id: string
+          stripe_payment_method_id: string | null
+          user_id: string
+        }
+        Insert: {
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_customer_id: string
+          stripe_payment_method_id?: string | null
+          user_id: string
+        }
+        Update: {
+          card_brand?: string | null
+          card_last_four?: string | null
+          created_at?: string
+          id?: string
+          is_default?: boolean | null
+          stripe_customer_id?: string
+          stripe_payment_method_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Car, Phone, MessageSquare, Star, MapPin, Navigation, Clock, Shield, X } from 'lucide-react';
+import { Car, Phone, MessageSquare, Star, MapPin, Navigation, Clock, Shield, X, CreditCard, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RideDetails } from './BookingFlow';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface RideConfirmationProps {
   driver: NonNullable<RideDetails['driver']>;
@@ -21,8 +24,11 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
   onCancel,
   onNewRide,
 }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [eta, setEta] = useState(driver.eta);
   const [status, setStatus] = useState<'arriving' | 'arrived' | 'inProgress' | 'completed'>('arriving');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Simulate ETA countdown
   useEffect(() => {
@@ -64,6 +70,44 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
         return 'bg-blue-500';
       case 'completed':
         return 'bg-primary';
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      toast({
+        title: 'Authentication required',
+        description: 'Please sign in to pay for your ride.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsProcessingPayment(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-payment', {
+        body: {
+          amount: ride.price,
+          rideType: ride.name.toLowerCase(),
+          pickupAddress: pickup,
+          dropoffAddress: dropoff,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Payment failed',
+        description: 'There was an error processing your payment. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -156,13 +200,33 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
 
         {/* Action Buttons */}
         {status === 'arriving' ? (
-          <Button
-            variant="outline"
-            className="w-full text-destructive hover:bg-destructive hover:text-destructive-foreground"
-            onClick={onCancel}
-          >
-            Cancel Ride
-          </Button>
+          <div className="space-y-3">
+            <Button
+              variant="hero"
+              className="w-full"
+              onClick={handlePayment}
+              disabled={isProcessingPayment}
+            >
+              {isProcessingPayment ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Pay ${ride.price.toFixed(2)}
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={onCancel}
+            >
+              Cancel Ride
+            </Button>
+          </div>
         ) : status === 'arrived' ? (
           <Button
             variant="hero"
