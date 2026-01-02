@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Car, Phone, MessageSquare, Star, MapPin, Navigation, Clock, Shield, X, CreditCard, Loader2 } from 'lucide-react';
+import { Car, Phone, MessageSquare, Star, MapPin, Navigation, Clock, Shield, X, CreditCard, Loader2, Play } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RideDetails } from './BookingFlow';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useDriverSimulation } from '@/hooks/useDriverSimulation';
+import { useMapStore } from '@/stores/mapStore';
+import RatingModal from '@/components/RatingModal';
 
 interface RideConfirmationProps {
   driver: NonNullable<RideDetails['driver']>;
@@ -14,6 +17,9 @@ interface RideConfirmationProps {
   dropoff: string;
   onCancel: () => void;
   onNewRide: () => void;
+  activeRideId?: string | null;
+  tripId?: string | null;
+  driverId?: string | null;
 }
 
 const RideConfirmation: React.FC<RideConfirmationProps> = ({
@@ -23,12 +29,44 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
   dropoff,
   onCancel,
   onNewRide,
+  activeRideId,
+  tripId,
+  driverId,
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { pickupLocation, dropoffLocation } = useMapStore();
   const [eta, setEta] = useState(driver.eta);
   const [status, setStatus] = useState<'arriving' | 'arrived' | 'inProgress' | 'completed'>('arriving');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+
+  // Driver simulation
+  const { driver: simDriver, isSimulating, startSimulation } = useDriverSimulation(
+    activeRideId || null,
+    pickupLocation?.[1],
+    pickupLocation?.[0],
+    dropoffLocation?.[1],
+    dropoffLocation?.[0]
+  );
+
+  // Update status based on simulation
+  useEffect(() => {
+    if (simDriver) {
+      if (simDriver.status === 'driver_assigned') {
+        setStatus('arriving');
+      } else if (simDriver.status === 'arriving') {
+        setStatus('arrived');
+      } else if (simDriver.status === 'in_progress') {
+        setStatus('inProgress');
+      } else if (simDriver.status === 'completed') {
+        setStatus('completed');
+        if (tripId && driverId) {
+          setShowRatingModal(true);
+        }
+      }
+    }
+  }, [simDriver?.status, tripId, driverId]);
 
   // Simulate ETA countdown
   useEffect(() => {
@@ -201,6 +239,22 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
         {/* Action Buttons */}
         {status === 'arriving' ? (
           <div className="space-y-3">
+            {!isSimulating && activeRideId && (
+              <Button
+                variant="outline"
+                className="w-full gap-2"
+                onClick={startSimulation}
+              >
+                <Play className="w-4 h-4" />
+                Start Driver Simulation
+              </Button>
+            )}
+            {isSimulating && (
+              <div className="flex items-center justify-center gap-2 text-primary py-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Driver simulation in progress...</span>
+              </div>
+            )}
             <Button
               variant="hero"
               className="w-full"
@@ -236,13 +290,10 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
             Start Trip
           </Button>
         ) : status === 'inProgress' ? (
-          <Button
-            variant="hero"
-            className="w-full"
-            onClick={() => setStatus('completed')}
-          >
-            Complete Trip
-          </Button>
+          <div className="flex items-center justify-center gap-2 text-primary py-4">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="font-medium">En route to destination...</span>
+          </div>
         ) : (
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2 text-primary">
@@ -259,6 +310,18 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
           </div>
         )}
       </div>
+
+      {/* Rating Modal */}
+      {tripId && driverId && (
+        <RatingModal
+          isOpen={showRatingModal}
+          onClose={() => setShowRatingModal(false)}
+          tripId={tripId}
+          driverId={driverId}
+          driverName={driver.name}
+          onRatingSubmitted={() => setShowRatingModal(false)}
+        />
+      )}
     </Card>
   );
 };
