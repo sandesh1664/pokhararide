@@ -123,6 +123,13 @@ const RideConfirmation: React.FC<RideConfirmationProps> = ({
 
     setIsProcessingPayment(true);
     try {
+      // Get the current session to ensure we have a valid token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        throw new Error('No valid session found. Please sign in again.');
+      }
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: {
           amount: ride.price,
