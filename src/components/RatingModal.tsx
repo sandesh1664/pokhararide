@@ -50,7 +50,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
         return;
       }
 
-      const { error } = await (supabase.from('ratings' as any) as any).insert({
+      const { error } = await supabase.from('ratings').insert({
         trip_id: tripId,
         rider_id: user.id,
         driver_id: driverId,

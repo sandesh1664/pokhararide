@@ -188,6 +188,36 @@ export type Database = {
         }
         Relationships: []
       }
+      ratings: {
+        Row: {
+          created_at: string
+          driver_id: string
+          id: string
+          rating: number
+          review: string | null
+          rider_id: string
+          trip_id: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id: string
+          id?: string
+          rating: number
+          review?: string | null
+          rider_id: string
+          trip_id: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string
+          id?: string
+          rating?: number
+          review?: string | null
+          rider_id?: string
+          trip_id?: string
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           completed_at: string | null
