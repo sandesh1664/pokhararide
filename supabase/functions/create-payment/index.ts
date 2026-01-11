@@ -21,30 +21,40 @@ serve(async (req) => {
   try {
     logStep("Function started");
     
-    const { amount, rideType, pickupAddress, dropoffAddress } = await req.json();
-    logStep("Request body parsed", { amount, rideType });
+    // Validate authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with auth header
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Get authenticated user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("No authorization header provided");
-    }
-    
+    // Validate JWT using getClaims
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const { data: claimsData, error: claimsError } = await supabaseClient.auth.getClaims(token);
     
-    if (userError || !userData.user?.email) {
-      throw new Error("User not authenticated or email not available");
+    if (claimsError || !claimsData?.claims) {
+      logStep("JWT validation failed", { error: claimsError?.message });
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
     }
-    
-    const user = userData.user;
-    logStep("User authenticated", { userId: user.id, email: user.email });
+
+    const userId = claimsData.claims.sub;
+    const userEmail = claimsData.claims.email;
+    logStep("User authenticated via getClaims", { userId, email: userEmail });
+
+    const { amount, rideType, pickupAddress, dropoffAddress } = await req.json();
+    logStep("Request body parsed", { amount, rideType });
 
     // Initialize Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -57,7 +67,7 @@ serve(async (req) => {
     });
 
     // Check if a Stripe customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     let customerId: string | undefined;
     
     if (customers.data.length > 0) {
@@ -66,9 +76,9 @@ serve(async (req) => {
     } else {
       // Create a new customer
       const customer = await stripe.customers.create({
-        email: user.email,
+        email: userEmail,
         metadata: {
-          user_id: user.id,
+          user_id: userId,
         },
       });
       customerId = customer.id;
@@ -95,7 +105,7 @@ serve(async (req) => {
       success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
-        user_id: user.id,
+        user_id: userId,
         ride_type: rideType,
         pickup_address: pickupAddress,
         dropoff_address: dropoffAddress,
